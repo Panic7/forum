@@ -12,7 +12,7 @@ create table users
 create table pictures
 (
     id   serial not null primary key,
-    url text
+    url  text
 );
 
 create table topics
@@ -45,4 +45,4 @@ alter table topics
 alter table users
     add constraint fk_users_pictures
         foreign key (picture_id)
-            references users (id);
+            references pictures (id);

@@ -1,43 +1,76 @@
 package com.example.forum.security.jwt;
 
+import com.example.forum.security.UserDetailsServiceImpl;
+import io.jsonwebtoken.ExpiredJwtException;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
+import lombok.experimental.FieldDefaults;
+import org.apache.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.Null;
 import java.io.IOException;
 
 @Component
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
-public class JwtFilter extends GenericFilterBean {
+public class JwtFilter extends OncePerRequestFilter {
 
-    private final JwtProvider jwtProvider;
+    JwtProvider jwtProvider;
+    UserDetailsServiceImpl userDetailsService;
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-
-        String token = jwtProvider.resolveToken((HttpServletRequest) servletRequest);
-        try{
-            if(token != null && jwtProvider.validateToken(token)) {
-                Authentication authentication = jwtProvider.getAuthentication(token);
-
-                if(authentication != null) {
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws IOException, ServletException {
+        String token = parseJwt(request);
+        String username = null;
+        if (token != null) {
+            try {
+                username = jwtProvider.extractUsername(token);
+            } catch (IllegalArgumentException e) {
+                response.sendError(HttpStatus.SC_BAD_REQUEST, "Unable to get JWT Token");
+                logger.warn("JWT Token has expired");
+            } catch (ExpiredJwtException e) {
+                response.sendError(HttpStatus.SC_BAD_REQUEST, "JWT Token has expired");
+                logger.warn("JWT Token has expired");
             }
-        } catch (JwtAuthenticationException e) {
-            SecurityContextHolder.clearContext();
-            ((HttpServletResponse) servletResponse).sendError(e.getHttpStatus().value());
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            throw new JwtAuthenticationException("JWT token is expired or invalid");
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                // After setting the Authentication in the context, we specify
+                // that the current user is authenticated. So it passes the
+                // Spring Security Configurations successfully.
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } else {
+            logger.warn("JWT Token does not begin with Bearer String, or unable to get header from request");
         }
-        filterChain.doFilter(servletRequest, servletResponse);
+        filterChain.doFilter(request, response);
+    }
+
+    private String parseJwt(HttpServletRequest request) {
+        String tokenHeader = request.getHeader("Authorization");
+
+        if (tokenHeader != null && tokenHeader.startsWith("Bearer ")) {
+            return tokenHeader.substring(7);
+        }
+        return null;
     }
 }

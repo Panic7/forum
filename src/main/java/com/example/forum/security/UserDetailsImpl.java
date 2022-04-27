@@ -3,6 +3,7 @@ package com.example.forum.security;
 import com.example.forum.model.Role;
 import com.example.forum.model.Status;
 import com.example.forum.model.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,16 +15,21 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
-@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 public class UserDetailsImpl implements UserDetails {
 
     String username;
+
+    @JsonIgnore
     String password;
+
     boolean isActive;
+
     GrantedAuthority authority;
 
     @Override
@@ -51,21 +57,13 @@ public class UserDetailsImpl implements UserDetails {
         return isActive;
     }
 
-    public static UserDetails createUserDetails(User user) {
-        return new org.springframework.security.core.userdetails.User(
+    public static UserDetails create(User user) {
+        return new UserDetailsImpl(
                 user.getEmail(),
                 user.getPassword(),
                 user.getStatus().equals(Status.ACTIVE),
-                user.getStatus().equals(Status.ACTIVE),
-                user.getStatus().equals(Status.ACTIVE),
-                user.getStatus().equals(Status.ACTIVE),
-                List.of(getAuthority(user.getRole()))
-
+                new SimpleGrantedAuthority(user.getRole().name())
         );
-    }
-
-    private static GrantedAuthority getAuthority(Role userRole) {
-        return new SimpleGrantedAuthority("ROLE_" + userRole.name());
     }
 
 }

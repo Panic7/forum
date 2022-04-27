@@ -1,66 +1,47 @@
 package com.example.forum.controller;
 
-import com.example.forum.model.User;
-import com.example.forum.model.dto.LoginUserDTO;
+import com.example.forum.model.dto.JwtRequest;
+import com.example.forum.security.UserDetailsImpl;
+import com.example.forum.security.UserDetailsServiceImpl;
 import com.example.forum.security.jwt.JwtProvider;
-import com.example.forum.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
-import java.util.Map;
 
 
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@Controller
+@RestController
+@CrossOrigin
+@RequestMapping("/api/public")
 public class LoginController {
 
     AuthenticationManager authenticationManager;
 
+    UserDetailsServiceImpl userDetailsService;
+
     JwtProvider jwtProvider;
 
-    UserService userService;
+    @PostMapping("/authenticate")
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest request) {
+        authenticate(request.getUsername(), request.getPassword());
 
-    @GetMapping("/login")
-    public String loginPage(){
-        System.out.println("hello");
-        return "login";
-    }
+        final UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService
+                .loadUserByUsername(request.getUsername());
 
-    @PostMapping("/login")
-    public String login(@ModelAttribute(name = "loginUserDTO") LoginUserDTO userDTO, Model model) {
-        try {
-            String email = userDTO.getEmail();
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, userDTO.getPassword()));
-            User user = userService.findByEmail(email);
+        final String token = jwtProvider.generateToken(userDetails);
 
-            if (user == null) {
-                model.addAttribute("invalidCredentials", true);
-                return "login";
-            }
-
-            String token = jwtProvider.createToken(email, user.getRole().name());
-
-            Map<String, String> response = new HashMap<>();
-            response.put("email", email);
-            response.put("token", token);
-
-        } catch (AuthenticationException e) {
-            model.addAttribute("invalidCredentials", true);
-            return "login";
-        }
-        return "index";
+        return ResponseEntity.ok(token);
     }
 
     @PostMapping("/logout")
@@ -69,5 +50,15 @@ public class LoginController {
         securityContextLogoutHandler.logout(request,response,null);
 
         return "login";
+    }
+
+    private void authenticate(String username, String password) {
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+        } catch (DisabledException e) {
+            throw new IllegalArgumentException("User disabled", e);
+        } catch (BadCredentialsException e) {
+            throw new IllegalArgumentException("Incorrect username or password", e);
+        }
     }
 }

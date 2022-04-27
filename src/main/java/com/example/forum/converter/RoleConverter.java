@@ -8,10 +8,9 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-@Converter(autoApply = true)
-public class RoleConverter implements AttributeConverter<Role, String> {
+public class RoleConverter  {
 
-    @Override
+/*    @Override
     public String convertToDatabaseColumn(Role role) {
         return Optional
                 .ofNullable(role)
@@ -28,5 +27,5 @@ public class RoleConverter implements AttributeConverter<Role, String> {
                 .findFirst()
                 .orElseThrow(IllegalArgumentException::new);
 
-    }
+    }*/
 }

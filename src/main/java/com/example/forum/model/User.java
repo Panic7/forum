@@ -20,13 +20,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer ID;
 
-    @NotBlank(message = "Enter the name")
-    @Size(min = 4, max = 30, message = "Name must be of 4 to 30 symbols long ")
+    //@NotBlank(message = "Enter the name")
+    //@Size(min = 4, max = 30, message = "Name must be of 4 to 30 symbols long ")
     String name;
 
     String email;
 
-    @NotBlank(message = "Password must be at least 6 characters long")
+    //@NotBlank(message = "Password must be at least 6 characters long")
     String password;
 
     @Enumerated(value = EnumType.STRING)
@@ -39,8 +39,7 @@ public class User {
 
     @OneToOne(
             cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY
+            orphanRemoval = true
     )
     @JoinColumn(name = "picture_id", referencedColumnName = "id")
     Picture picture;

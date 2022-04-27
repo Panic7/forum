@@ -1,26 +1,22 @@
 package com.example.forum.security.jwt;
 
-import com.example.forum.security.UserDetailsServiceImpl;
+import com.example.forum.security.UserDetailsImpl;
 import io.jsonwebtoken.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-@Component
+@Service
 public class JwtProvider {
-
-    private final UserDetailsServiceImpl userDetailsService;
-
-    @Value("${jwt.header}")
-    private String header;
 
     @Value("${jwt.secret}")
     private String secret;
@@ -28,48 +24,51 @@ public class JwtProvider {
     @Value("${jwt.expired}")
     private long tokenExpiration;
 
-    @Autowired
-    public JwtProvider(UserDetailsServiceImpl userDetailsService){
-        this.userDetailsService = userDetailsService;
+    //retrieve username from jwt token
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
     }
 
+    //retrieve expiration date from jwt token
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
 
-    public String createToken(String username, String role) {
-        Claims claims = Jwts.claims().setSubject(username);
-        claims.put("role", role);
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+    //for retrieveing any information from token we will need the secret key
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+    }
 
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + tokenExpiration);
+    //generate token for user
+    public String generateToken(UserDetailsImpl userDetails) {
+        final String authorities = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("AUTHORITIES", authorities);
+
+        return createToken(claims, userDetails.getUsername());
+    }
+
+    //while creating the token -
+    //1. Define  claims of the token, like Issuer, Expiration, Subject, and the ID
+    //2. Sign the JWT using the HS512 algorithm and secret key.
+    //3. According to JWS Compact Serialization
+    //   compaction of the JWT to a URL-safe string
+    private String createToken(Map<String, Object> claims, String subject) {
 
         return Jwts.builder()
                 .setClaims(claims)
-                .setIssuedAt(now)  //when created
-                .setExpiration(validity) //token validity
-                .signWith(SignatureAlgorithm.HS256, secret)
+                .setSubject(subject)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date((new Date()).getTime() + tokenExpiration))
+                .signWith(SignatureAlgorithm.HS512, secret)
                 .compact();
     }
 
-    public boolean validateToken(String token) {
-        try{
-            Jws<Claims> claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
-
-            return !claims.getBody().getExpiration().before(new Date());
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new JwtAuthenticationException("JWT token is expired or invalid" + HttpStatus.UNAUTHORIZED);
-        }
-    }
-
-    public Authentication getAuthentication(String token) {
-        UserDetails details = userDetailsService.loadUserByUsername(getUsername(token));
-
-        return new UsernamePasswordAuthenticationToken(details, "", details.getAuthorities());
-    }
-
-    public String getUsername(String token) {
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody().getSubject();
-    }
-
-    public String resolveToken(HttpServletRequest request) {
-        return request.getHeader(header);
-    }
 }
