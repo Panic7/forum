@@ -1,5 +1,6 @@
 package com.example.forum.security.jwt;
 
+import com.example.forum.common.StringConstants;
 import com.example.forum.security.UserDetailsServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.AccessLevel;
@@ -11,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -20,6 +22,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Null;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
 
 @Component
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
@@ -28,10 +33,20 @@ public class JwtFilter extends OncePerRequestFilter {
 
     JwtProvider jwtProvider;
     UserDetailsServiceImpl userDetailsService;
+    AntPathMatcher pathMatcher = new AntPathMatcher();
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        List<String> paths = List.of(StringConstants.SKIP_URLS);
+        String requestURI = request.getRequestURI();
+        return paths.stream().anyMatch(p -> pathMatcher.match(p, requestURI));
+    }
 
     @Override
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
+        logger.info("Request URL path : " + request.getRequestURI());
+        logger.info("Request content type: " + request.getContentType());
         String token = parseJwt(request);
         String username = null;
         if (token != null) {
