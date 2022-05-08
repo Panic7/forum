@@ -1,46 +1,54 @@
 package com.example.forum.security.jwt;
 
+import com.example.forum.model.dto.JwtResponse;
 import com.example.forum.security.UserDetailsImpl;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 
-import java.util.Date;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-public class JwtProvider {
+public class JwtService {
 
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expired}")
-    private long tokenExpiration;
-
-    //retrieve username from jwt token
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token)
+                .getBody();
+        return claims.getSubject();
     }
 
-    //retrieve expiration date from jwt token
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    public String extractAuthorities(String token) {
+        Map<String, Object> info = extractAllClaims(token);
+
+        return (String) info.get("authorities");
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+    public JwtResponse extractResponse(String token) {
+        Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token)
+                .getBody();
+
+        return JwtResponse.builder()
+                .userEmail(claims.getSubject())
+                .authorities((String) claims.get("authorities"))
+                .build();
+
     }
+
     //for retrieveing any information from token we will need the secret key
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+    private Map<String, Object> extractAllClaims(String token) {
+        Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token)
+                .getBody();
+
+        return new HashMap<>(claims);
     }
 
     //generate token for user
@@ -50,7 +58,7 @@ public class JwtProvider {
                 .collect(Collectors.joining(","));
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("AUTHORITIES", authorities);
+        claims.put("authorities", authorities);
 
         return createToken(claims, userDetails.getUsername());
     }
@@ -65,8 +73,7 @@ public class JwtProvider {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date((new Date()).getTime() + tokenExpiration))
+                .setExpiration(Timestamp.valueOf(LocalDateTime.now().plusMinutes(15)))
                 .signWith(SignatureAlgorithm.HS512, secret)
                 .compact();
     }

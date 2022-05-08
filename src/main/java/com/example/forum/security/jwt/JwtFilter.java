@@ -6,32 +6,38 @@ import io.jsonwebtoken.ExpiredJwtException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.apache.http.HttpStatus;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.ModelAndViewDefiningException;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.constraints.Null;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
 
+@Slf4j
 @Component
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    JwtProvider jwtProvider;
+    @NonFinal
+    @Value("${cookie.jwt}")
+    private String cookieName;
+    JwtService jwtService;
     UserDetailsServiceImpl userDetailsService;
     AntPathMatcher pathMatcher = new AntPathMatcher();
 
@@ -51,13 +57,17 @@ public class JwtFilter extends OncePerRequestFilter {
         String username = null;
         if (token != null) {
             try {
-                username = jwtProvider.extractUsername(token);
+                username = jwtService.extractUsername(token);
             } catch (IllegalArgumentException e) {
-                response.sendError(HttpStatus.SC_BAD_REQUEST, "Unable to get JWT Token");
-                logger.warn("JWT Token has expired");
+                logger.warn("Unable to get JWT Token");
+                ModelAndView mav = new ModelAndView("login");
+
+                throw new ModelAndViewDefiningException(mav);
             } catch (ExpiredJwtException e) {
-                response.sendError(HttpStatus.SC_BAD_REQUEST, "JWT Token has expired");
                 logger.warn("JWT Token has expired");
+                ModelAndView mav = new ModelAndView("login");
+
+                throw new ModelAndViewDefiningException(mav);
             }
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -75,16 +85,19 @@ public class JwtFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } else {
-            logger.warn("JWT Token does not begin with Bearer String, or unable to get header from request");
+            logger.warn("JWT Token does not begin with Bearer_ String, or unable to get cookies");
         }
         filterChain.doFilter(request, response);
     }
 
     private String parseJwt(HttpServletRequest request) {
-        String tokenHeader = request.getHeader("Authorization");
+        String token = Arrays.stream(request.getCookies())
+                .filter(cookie -> cookie.getName().equals(cookieName)).findFirst().map(Cookie::getValue)
+                .orElse("empty");
 
-        if (tokenHeader != null && tokenHeader.startsWith("Bearer ")) {
-            return tokenHeader.substring(7);
+        log.info("token : {}", token);
+        if (token != null && token.startsWith("Bearer_")) {
+            return token.substring(7);
         }
         return null;
     }
