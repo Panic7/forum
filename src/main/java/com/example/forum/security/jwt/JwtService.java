@@ -3,11 +3,13 @@ package com.example.forum.security.jwt;
 import com.example.forum.model.dto.JwtResponse;
 import com.example.forum.security.UserDetailsImpl;
 import io.jsonwebtoken.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 
+import javax.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class JwtService {
 
     @Value("${jwt.secret}")
@@ -33,6 +36,7 @@ public class JwtService {
     }
 
     public JwtResponse extractResponse(String token) {
+
         Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token)
                 .getBody();
 
@@ -76,6 +80,13 @@ public class JwtService {
                 .setExpiration(Timestamp.valueOf(LocalDateTime.now().plusMinutes(15)))
                 .signWith(SignatureAlgorithm.HS512, secret)
                 .compact();
+    }
+
+    public String resolveToken(String bearerToken) {
+        if (bearerToken != null && bearerToken.startsWith("Bearer_")) {
+            return bearerToken.substring(7);
+        }
+        return bearerToken;
     }
 
 }

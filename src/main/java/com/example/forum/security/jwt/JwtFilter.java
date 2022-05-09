@@ -54,7 +54,7 @@ public class JwtFilter extends OncePerRequestFilter {
         logger.info("Request URL path : " + request.getRequestURI());
         logger.info("Request content type: " + request.getContentType());
         String token = parseJwt(request);
-        String username = null;
+        String username;
         if (token != null) {
             try {
                 username = jwtService.extractUsername(token);
@@ -95,7 +95,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 .filter(cookie -> cookie.getName().equals(cookieName)).findFirst().map(Cookie::getValue)
                 .orElse("empty");
 
-        log.info("token : {}", token);
         if (token != null && token.startsWith("Bearer_")) {
             return token.substring(7);
         }

@@ -20,9 +20,9 @@ public class TopicController {
 
     private final TopicService topicService;
 
-    //@PreAuthorize("hasAnyRole('ROLE_USER','ROLE_ADMIN')")
     @GetMapping("/dashboard")
-    public String getTopicList(Model model) {
+    public String getTopicList(Model model, @LoginUser JwtResponse jwtResponse) {
+        log.info("JwtResponse : {}", jwtResponse);
         model.addAttribute("topics", topicService.findAll());
         return "index";
     }

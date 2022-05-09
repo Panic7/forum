@@ -39,7 +39,6 @@ public class LoginUserResolver implements HandlerMethodArgumentResolver {
     public Object resolveArgument(MethodParameter param, ModelAndViewContainer mvc, NativeWebRequest nreq,
             WebDataBinderFactory dbf) throws Exception {
         final Map<String, Object> resolved = new HashMap<>();
-        log.info("IT'S LOGINUSERRESOLVER");
 
         HttpServletRequest req = (HttpServletRequest) nreq.getNativeRequest();
 
@@ -49,7 +48,7 @@ public class LoginUserResolver implements HandlerMethodArgumentResolver {
 
                     // @LoginUser JwtResponse jwtResponse
                     if (param.getParameterType().isAssignableFrom(JwtResponse.class)) {
-                        JwtResponse jwtResponse = jwtService.extractResponse(token);
+                        JwtResponse jwtResponse = jwtService.extractResponse(jwtService.resolveToken(token));
 
                         resolved.put("resolved", jwtResponse);
                     }

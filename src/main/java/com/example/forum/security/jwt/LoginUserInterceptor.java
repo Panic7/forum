@@ -32,15 +32,13 @@ public class LoginUserInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws ModelAndViewDefiningException {
 
-        String token = Arrays.stream(request.getCookies())
+        String bearerToken = Arrays.stream(request.getCookies())
                 .filter(cookie -> cookie.getName().equals(cookieName)).findFirst().map(Cookie::getValue)
                 .orElse("empty");
-        log.info("IT'S LOGIN_INTERCEPTOR");
-        log.info("token : {}", token);
 
         try {
             // Set user information ‘verify’ in ‘request’ so that login information can be easily retrieved and used like ‘session.id’ in ‘View’
-            JwtResponse jwtResponse = jwtService.extractResponse(token);
+            JwtResponse jwtResponse = jwtService.extractResponse(jwtService.resolveToken(bearerToken));
 
             // Accessible as `jwtResponse.email`, `jwtResponse.id` in `view`
             request.setAttribute("jwtResponse", jwtResponse);
