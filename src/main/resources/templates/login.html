@@ -7,10 +7,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
 
-    <title>SB Admin 2 - Login</title>
+    <title>Login - Rocket</title>
 
     <!-- Custom fonts for this template-->
     <link th:href="@{/css/all.min.css}" rel="stylesheet" type="text/css">
@@ -20,8 +18,8 @@
 
     <!-- Custom styles for this template-->
     <link th:href="@{css/sb-admin-2.min.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/custom-style.css}">
     <link th:href="@{/img/favicon.ico}" rel="shortcut icon" >
-
 
 </head>
 
@@ -46,22 +44,22 @@
                                     </div>
                                     <form class="user" th:action="@{/login}" th:object="${request}" method="post">
                                         <div class="form-group">
-                                            <input th:field="*{username}" type="email" class="form-control form-control-user"
-                                                id="exampleInputEmail" aria-describedby="emailHelp"
-                                                placeholder="Enter Email Address...">
+                                            <input th:field="*{login}" type="text" class="form-control form-control-user"
+                                                   id="exampleInputLogin"
+                                                   placeholder="Enter username or email...">
+                                                <small th:if="${#fields.hasErrors('login')}" th:errors="*{login}"/>
                                         </div>
                                         <div class="form-group">
                                             <input th:field="*{password}"type="password" class="form-control form-control-user"
                                                 id="exampleInputPassword" placeholder="Password">
+                                            <small th:if="${#fields.hasErrors('password')}" th:errors="*{password}"/>
                                         </div>
                                         <div class="form-group">
                                             <div class="custom-control custom-checkbox small">
                                                 <input type="checkbox" class="custom-control-input" id="customCheck">
-                                                <label class="custom-control-label" for="customCheck">Remember
-                                                    Me</label>
                                             </div>
                                         </div>
-                                        <input type="submit" class="btn btn-primary btn-user btn-block">login</input>
+                                        <button type="submit" class="btn btn-primary btn-user btn-block">Login</button>
                                         <hr>
                                         <a href="index.html" class="btn btn-google btn-user btn-block">
                                             <i class="fab fa-google fa-fw"></i> Login with Google
@@ -70,9 +68,6 @@
                                     <hr>
                                     <div class="text-center">
                                         <a class="small" href="forgot-password.html">Forgot Password?</a>
-                                    </div>
-                                    <div class="text-center">
-                                        <a class="small" href="register.html">Create an Account!</a>
                                     </div>
                                 </div>
                             </div>

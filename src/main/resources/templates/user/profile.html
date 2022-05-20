@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"
+      layout:decorate="~{layouts/blank}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile page</title>
+    <link rel="stylesheet" th:href="@{/css/custom-style.css}">
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex flex-column justify-content-center">
+        <h1 class="h1 text-center">This is profile view</h1>
+        <img th:src="${jwtResponse.pictureUrl}" class="img-profile rounded-circle" alt="Profile Image"
+             style="display:block; width: 200px; height: 200px; margin: 2em auto 2em auto;">
+        <form class="mx-auto mb-5 w-25" th:action="@{/user/profile/change-avatar}" method="post"
+              enctype="multipart/form-data">
+            <div class="input-group">
+                <label class="custom-file-label" for="file">Choose file</label>
+                <input type="file" class="custom-file-input" id="file" name="file">
+                <button type="submit" id="buttonFileUpload" class="btn btn-primary w-100">Confirm</button>
+            </div>
+        </form>
+
+        <h2 class="h2 mb-4 text-center">Change your password</h2>
+        <form th:action="@{/user/profile/change-password}" method="post">
+
+            <div class="form-group w-25 ml-auto mr-auto">
+                <label class="form-label" for="currPass">Enter your current password</label>
+                <input type="password" class="form-control" id="currPass" name="currPass">
+            </div>
+            <div class="form-group w-25 ml-auto mr-auto">
+                <label class="form-label" for="newPass">Enter the new password</label>
+                <input type="password" class="form-control" id="newPass" name="newPass">
+                <small id="passwordHelpBlock" class="form-text text-muted">
+                    Your password must be 5-16 characters.
+                </small>
+            </div>
+            <div class="form-group w-25 ml-auto mr-auto">
+                <label class="form-label" for="confirmNewPass">Confirm your password</label>
+                <input type="password" class="form-control mb-3" id="confirmNewPass" name="confirmNewPass">
+                <button id="buttPassChange"
+                        class="btn btn-primary mb-3 ml-auto mr-auto w-100">Change password
+                </button>
+                <div class="mb-2" th:if="${message}">
+                    <small th:text="${message}" class="form-text text-muted"></small>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

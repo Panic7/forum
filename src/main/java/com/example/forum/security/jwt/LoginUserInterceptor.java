@@ -1,5 +1,6 @@
 package com.example.forum.security.jwt;
 
+import com.example.forum.model.dto.JwtRequest;
 import com.example.forum.model.dto.JwtResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -32,6 +33,8 @@ public class LoginUserInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws ModelAndViewDefiningException {
 
+        log.info("LoginUserInterceptor start");
+
         String bearerToken = Arrays.stream(request.getCookies())
                 .filter(cookie -> cookie.getName().equals(cookieName)).findFirst().map(Cookie::getValue)
                 .orElse("empty");
@@ -46,16 +49,18 @@ public class LoginUserInterceptor implements HandlerInterceptor {
             log.error("token expired");
 
             ModelAndView mav = new ModelAndView("login");
-            mav.addObject("return_url", request.getRequestURI());
+            mav.addObject("request", new JwtRequest());
 
             throw new ModelAndViewDefiningException(mav);
         } catch (JwtException ex) {
             log.error("bad token");
 
             ModelAndView mav = new ModelAndView("login");
+            mav.addObject("request", new JwtRequest());
 
             throw new ModelAndViewDefiningException(mav);
         }
+        log.info("LoginUserInterceptor end");
 
         return true;
     }

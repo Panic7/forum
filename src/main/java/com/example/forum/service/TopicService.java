@@ -2,8 +2,8 @@ package com.example.forum.service;
 
 import com.example.forum.model.Category;
 import com.example.forum.model.Topic;
-import com.example.forum.model.User;
 import com.example.forum.model.dto.CategoryDTO;
+import com.example.forum.model.dto.CommentDTO;
 import com.example.forum.model.dto.TopicDTO;
 import com.example.forum.model.dto.UserDTO;
 import com.example.forum.repository.CategoryRepository;
@@ -12,11 +12,15 @@ import com.example.forum.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.tomcat.jni.Local;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -30,7 +34,7 @@ public class TopicService {
     ModelMapper modelMapper;
 
     public List<TopicDTO> findAll() {
-        return toDTOList(topicRepository.findAll());
+        return toDTOS(topicRepository.findAll());
     }
 
     public TopicDTO findById(Integer id) {
@@ -38,13 +42,19 @@ public class TopicService {
     }
 
     @Transactional
-    public void save(TopicDTO topicDTO) {
+    public boolean save(TopicDTO topicDTO, Integer userId) {
+
         Topic topic = toEntity(topicDTO);
-
-        topic.setCategory(categoryRepository.findByTitle(topicDTO.getCategoryDTO().getTitle()).orElseThrow());
-        topic.setAuthor(userRepository.findByName(topicDTO.getUserDTO().getName()).orElseThrow());
-
+        topic.setCreationDate(LocalDateTime.now());
+        topic.setUser(userRepository.getById(userId));
+        Optional<Category> optional = categoryRepository.findByTitle(topicDTO.getCategoryDTO().getTitle());
+        if (optional.isEmpty()) {
+            return false;
+        }
+        topic.setCategory(optional.get());
+        if (topic.getViews() == null) topic.setViews(0);
         topicRepository.save(topic);
+        return true;
     }
 
 
@@ -63,33 +73,84 @@ public class TopicService {
         topicRepository.deleteById(id);
     }
 
-    private TopicDTO toDTO(Topic topic) {
+    public Topic toEntity(TopicDTO topicDTO) {
+        return modelMapper.map(topicDTO, Topic.class);
+    }
+
+    public TopicDTO toDTO(Topic topic) {
         TopicDTO topicDTO = modelMapper.map(topic, TopicDTO.class);
-
         topicDTO.setCategoryDTO(modelMapper.map(topic.getCategory(), CategoryDTO.class));
-        topicDTO.setUserDTO(modelMapper.map(topic.getAuthor(), UserDTO.class));
-
+        topicDTO.setUserDTO(modelMapper.map(topic.getUser(), UserDTO.class));
+        List<CommentDTO> commentDTOS = topic.getComments().stream()
+                .map(cmnt -> modelMapper.map(cmnt, CommentDTO.class))
+                .toList();
+        topicDTO.setComments(commentDTOS);
         return topicDTO;
     }
 
-    private Topic toEntity(TopicDTO topicDTO) {
-        Topic topic = modelMapper.map(topicDTO, Topic.class);
-
-        topic.setAuthor(modelMapper.map(topicDTO.getUserDTO(), User.class));
-        topic.setCategory(modelMapper.map(topicDTO.getCategoryDTO(), Category.class));
-
-        return topic;
-    }
-
-    private List<Topic> toEntityList(List<TopicDTO> topics) {
+    private List<Topic> toEntities(List<TopicDTO> topics) {
         return topics.stream()
                 .map(this::toEntity)
                 .collect(Collectors.toList());
     }
 
-    private List<TopicDTO> toDTOList(List<Topic> topics) {
+    private List<TopicDTO> toDTOS(List<Topic> topics) {
         return topics.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    public List<TopicDTO> actualizeSinceCreation(List<TopicDTO> topicDTOS) {
+        return topicDTOS.stream()
+                .map(this::actualizeSinceCreation)
+                .collect(Collectors.toList());
+    }
+
+    public TopicDTO actualizeSinceCreation(TopicDTO topicDTO) {
+        LocalDateTime startDateTime = topicDTO.getCreationDate();
+        LocalDateTime endDateTime = LocalDateTime.now();
+        LocalDateTime tempDateTime = LocalDateTime.from(startDateTime);
+
+        long years = tempDateTime.until( endDateTime, ChronoUnit.YEARS );
+        tempDateTime = tempDateTime.plusYears( years );
+
+        long months = tempDateTime.until( endDateTime, ChronoUnit.MONTHS );
+        tempDateTime = tempDateTime.plusMonths( months );
+
+        long days = tempDateTime.until( endDateTime, ChronoUnit.DAYS );
+        tempDateTime = tempDateTime.plusDays( days );
+
+        long hours = tempDateTime.until( endDateTime, ChronoUnit.HOURS );
+        tempDateTime = tempDateTime.plusHours( hours );
+
+        long minutes = tempDateTime.until( endDateTime, ChronoUnit.MINUTES );
+        tempDateTime = tempDateTime.plusMinutes( minutes );
+
+        if(years > 0) {
+            if(months > 0 ) {
+                topicDTO.setSinceCreation(years + " years " + months + " months ago");
+                return topicDTO;
+            }
+            topicDTO.setSinceCreation(years + " years ago");
+            return topicDTO;
+        }
+        if(months > 0) {
+            topicDTO.setSinceCreation(months + " months ago");
+            return topicDTO;
+        }
+        if(days > 0) {
+            topicDTO.setSinceCreation(days + " days ago");
+            return topicDTO;
+        }
+        if(hours > 0) {
+            topicDTO.setSinceCreation(hours + " hours ago");
+            return topicDTO;
+        }
+        if(minutes > 0) {
+            topicDTO.setSinceCreation(minutes + " minutes ago");
+            return topicDTO;
+        }
+        topicDTO.setSinceCreation("just now");
+        return topicDTO;
     }
 }

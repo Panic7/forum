@@ -1,6 +1,7 @@
 package com.example.forum.security.jwt;
 
 import com.example.forum.common.StringConstants;
+import com.example.forum.security.UserDetailsImpl;
 import com.example.forum.security.UserDetailsServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.AccessLevel;
@@ -42,7 +43,7 @@ public class JwtFilter extends OncePerRequestFilter {
     AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request){
         List<String> paths = List.of(StringConstants.SKIP_URLS);
         String requestURI = request.getRequestURI();
         return paths.stream().anyMatch(p -> pathMatcher.match(p, requestURI));
@@ -93,9 +94,9 @@ public class JwtFilter extends OncePerRequestFilter {
     private String parseJwt(HttpServletRequest request) {
         String token = Arrays.stream(request.getCookies())
                 .filter(cookie -> cookie.getName().equals(cookieName)).findFirst().map(Cookie::getValue)
-                .orElse("empty");
+                .orElse("cant get token from cookies");
 
-        if (token != null && token.startsWith("Bearer_")) {
+        if (token.startsWith("Bearer_")) {
             return token.substring(7);
         }
         return null;

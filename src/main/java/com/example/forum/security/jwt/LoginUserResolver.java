@@ -37,22 +37,38 @@ public class LoginUserResolver implements HandlerMethodArgumentResolver {
 
     @Override
     public Object resolveArgument(MethodParameter param, ModelAndViewContainer mvc, NativeWebRequest nreq,
-            WebDataBinderFactory dbf) throws Exception {
+                                  WebDataBinderFactory dbf) {
         final Map<String, Object> resolved = new HashMap<>();
+        log.info("LoginUserInterceptor start");
 
         HttpServletRequest req = (HttpServletRequest) nreq.getNativeRequest();
 
         // If there is a token in the cookie, take it out and verify it and return the login information
         Arrays.stream(req.getCookies()).filter(cookie -> cookie.getName().equals(cookieName))
                 .map(Cookie::getValue).findFirst().ifPresent(token -> {
+                    Map<String, Object> claims = jwtService.extractAllClaims(jwtService.resolveToken(token));
+
+                    //@LoginUser Integer id
+                    if (param.getParameterType().isAssignableFrom(Integer.class)) {
+                        resolved.put("resolved", claims.get("id"));
+                    }
+
+                    // @LoginUser String username, @LoginUser String email
+                    // @LoginUser String authorities @LoginUser String pictureUrl
+                    if (param.getParameterType().isAssignableFrom(String.class)) {
+                        resolved.put("resolved", claims.get(param.getParameterName()));
+                    }
 
                     // @LoginUser JwtResponse jwtResponse
                     if (param.getParameterType().isAssignableFrom(JwtResponse.class)) {
-                        JwtResponse jwtResponse = jwtService.extractResponse(jwtService.resolveToken(token));
-
-                        resolved.put("resolved", jwtResponse);
+                        resolved.put("resolved", JwtResponse.builder()
+                                .id((Integer) claims.get("id"))
+                                .username((String) claims.get("username"))
+                                .pictureUrl((String) claims.get("pictureUrl"))
+                                .build());
                     }
                 });
+        log.info("LoginUserInterceptor end");
 
         return resolved.get("resolved");
     }

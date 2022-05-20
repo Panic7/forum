@@ -23,7 +23,13 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class UserDetailsImpl implements UserDetails {
 
+    Integer id;
+
     String username;
+
+    String email;
+
+    String pictureUrl;
 
     @JsonIgnore
     String password;
@@ -59,7 +65,10 @@ public class UserDetailsImpl implements UserDetails {
 
     public static UserDetails create(User user) {
         return new UserDetailsImpl(
+                user.getID(),
+                user.getUsername(),
                 user.getEmail(),
+                user.getPicture().getUrl(),
                 user.getPassword(),
                 user.getStatus().equals(Status.ACTIVE),
                 new SimpleGrantedAuthority(user.getRole().name())

@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 
 @Setter
@@ -15,6 +17,9 @@ import java.io.Serializable;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class JwtRequest implements Serializable {
-    String username;
+    @NotBlank(message = "Enter username or email")
+    String login;
+
+    @Size(min = 5, max = 16, message = "Password length must be less than 17 and more than 4")
     String password;
 }

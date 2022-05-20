@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/blank}">
+<head>
+    <title>Create topic - Rocket</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="text-center mb-4">Add new Topic</h1>
+    <div class="container w-75">
+        <div class="rounded d-flex flex-column justify-content-center bg-white p-5 pt-4 mb-5 shadow">
+            <form th:action="@{/topic/add}" th:object="${topic}" method="post">
+                <div>
+                    <label for="header" class="form-label">Header</label>
+                    <input th:field="*{header}" id="header" placeholder="Header" type="text" class="form-control">
+                    <small th:if="${#fields.hasErrors('header')}" th:errors="*{header}"/>
+                </div>
+
+                <div>
+                    <label for="description" class="form-label mt-3">Description</label>
+                    <textarea th:field="*{description}" id="description" placeholder="Write..." rows="7" type="text"
+                           class="form-control"></textarea>
+                    <small class="mb-3" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></small>
+                </div>
+
+                <div>
+                    <label for="category" class="form-label mt-3">Category</label>
+                    <select th:field="*{categoryDTO.title}" id="category" class="form-select" >
+                        <option th:each="i : ${categories}" th:value="${i.title}" th:text="${i.title}">
+                        </option>
+                    </select>
+                    <small class="mb-3" th:if="${#fields.hasErrors('categoryDTO.title')}" th:errors="*{categoryDTO.title}"/>
+                </div>
+
+                <div class="form-check mb-3 mt-3">
+                    <input th:field="*{anonymous}" id="isAnonymous" type="checkbox" class="form-check-input">
+                    <label class="form-check-label" for="isAnonymous">Anonymously</label>
+                </div>
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-primary btn-block w-50">Submit</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

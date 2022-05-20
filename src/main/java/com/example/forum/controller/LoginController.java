@@ -14,6 +14,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 
 @RequiredArgsConstructor
@@ -28,10 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 @Controller
 @Slf4j
 public class LoginController {
-
-    @NonFinal
-    @Value("${cookie.jwt}")
-    String cookieJWT;
 
     AuthenticationManager authenticationManager;
 
@@ -45,26 +43,21 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public String createAuthenticationToken(JwtRequest request,
-                                            HttpServletResponse res,
-                                            BindingResult result) {
+    public String createAuthenticationToken(@Valid @ModelAttribute("request") JwtRequest request,
+                                            BindingResult result,
+                                            HttpServletResponse res) {
         if (result.hasErrors()) {
-            log.error((String) result.getTarget());
-            return "/login";
+            return "login";
         }
 
-        authenticate(request.getUsername(), request.getPassword());
-
+        try {
+            authenticate(request.getLogin(), request.getPassword());
+        } catch (IllegalArgumentException e) {
+            return "login";
+        }
         final UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService
-                .loadUserByUsername(request.getUsername());
-
-        Cookie cookie = new Cookie(cookieJWT,
-                "Bearer_" + jwtService.generateToken(userDetails));
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(Integer.MAX_VALUE);
-
-        res.addCookie(cookie);
+                    .loadUserByUsername(request.getLogin());
+        jwtService.saveJwtInCookies(res, userDetails);
 
         return "redirect:/dashboard";
     }
@@ -75,7 +68,9 @@ public class LoginController {
         } catch (DisabledException e) {
             throw new IllegalArgumentException("User disabled", e);
         } catch (BadCredentialsException e) {
-            throw new IllegalArgumentException("Incorrect username or password", e);
+            throw new IllegalArgumentException("Incorrect login or password", e);
+        } catch(AuthenticationException e) {
+            throw new IllegalArgumentException();
         }
     }
 }
