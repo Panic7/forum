@@ -36,7 +36,7 @@
                         <p class="lead text-gray-800 mb-5">Page not found</p>
                         <p class="text-gray-500 mb-0">It looks like you found a glitch in the matrix...</p>
                         <a th:if="${jwtResponse != null and jwtResponse.username != null}"
-                           th:href="@{/dashboard}">&larr; Back to Dashboard</a>
+                           th:href="@{/home}">&larr; Back to Home</a>
                         <a th:unless="${jwtResponse != null and jwtResponse.username != null}"
                            th:href="@{/login}">&larr; Back to login</a>
                     </div>

@@ -8,23 +8,43 @@
 
         <sqlFile dbms="postgresql"
                  relativeToChangelogFile="true"
-                 path="/sql/create_db.sql"/>
+                 path="/sql/1--create_db.sql"/>
 
         <rollback>
             <sql>
-                alter table if exists topics
-                drop constraint if exists fk_topics_users;
+                ALTER TABLE topics
+                DROP CONSTRAINT IF EXISTS fk_topics_users;
+                ALTER TABLE topics
+                DROP CONSTRAINT IF EXISTS fk_topics_categories;
+                ALTER TABLE users
+                DROP CONSTRAINT IF EXISTS fk_users_pictures;
+                ALTER TABLE comments
+                DROP CONSTRAINT IF EXISTS fk_comments_topics;
+                ALTER TABLE comments
+                DROP CONSTRAINT IF EXISTS fk_comments_users;
 
-                alter table if exists topics
-                drop constraint if exists fk_topics_category;
-
-                alter table if exists users
-                drop constraint if exists fk_users_pictures;
 
                 drop table if exists topics;
                 drop table if exists users;
                 drop table if exists pictures;
                 drop table if exists categories;
+                drop table if exists comments;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="2" author="zhloba">
+        <sqlFile dbms="postgresql"
+                 relativeToChangelogFile="true"
+                 path="/sql/2--topic_mark.sql"/>
+        <rollback>
+            <sql>
+                ALTER TABLE topic_mark
+                DROP CONSTRAINT IF EXISTS topic_mark_topic_id_fkey;
+                ALTER TABLE topic_mark
+                DROP CONSTRAINT IF EXISTS topic_mark_user_id_fkey;
+
+                drop table if exists topic_mark;
             </sql>
         </rollback>
 

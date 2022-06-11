@@ -1,7 +1,6 @@
 package com.example.forum.service;
 
 import com.example.forum.converter.UserMapper;
-import com.example.forum.model.Picture;
 import com.example.forum.model.User;
 import com.example.forum.model.dto.UserDTO;
 import com.example.forum.repository.UserRepository;
@@ -49,13 +48,11 @@ public class UserService {
 
         findedUser.setEmail(userDto.getEmail());
         findedUser.setUsername(userDto.getUsername());
-        findedUser.setPassword(userDto.getPassword());
+        findedUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
         findedUser.setRole(userDto.getRole());
         findedUser.setStatus(userDto.getStatus());
         if (userDto.getPictureUrl() != null) {
-            Picture picture = new Picture();
-            picture.setUrl(userDto.getPictureUrl());
-            findedUser.setPicture(picture);
+            findedUser.setPictureUrl(userDto.getPictureUrl());
         }
     }
 
@@ -75,10 +72,8 @@ public class UserService {
             redirectAttributes.addFlashAttribute("message", "There was an error, picture wasn't save, try again");
             return Map.of("redirectAttributes", redirectAttributes);
         }
-        Picture picture = new Picture();
-        picture.setUrl(url);
         User user = userRepository.findById(id).orElseThrow();
-        user.setPicture(picture);
+        user.setPictureUrl(url);
         userRepository.save(user);
         final UserDetailsImpl userDetails = (UserDetailsImpl) UserDetailsImpl.create(user);
         res = jwtService.updateJwtInCookies(res, req, userDetails);

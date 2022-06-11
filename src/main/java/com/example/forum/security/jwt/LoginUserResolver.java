@@ -39,7 +39,6 @@ public class LoginUserResolver implements HandlerMethodArgumentResolver {
     public Object resolveArgument(MethodParameter param, ModelAndViewContainer mvc, NativeWebRequest nreq,
                                   WebDataBinderFactory dbf) {
         final Map<String, Object> resolved = new HashMap<>();
-        log.info("LoginUserInterceptor start");
 
         HttpServletRequest req = (HttpServletRequest) nreq.getNativeRequest();
 
@@ -68,7 +67,6 @@ public class LoginUserResolver implements HandlerMethodArgumentResolver {
                                 .build());
                     }
                 });
-        log.info("LoginUserInterceptor end");
 
         return resolved.get("resolved");
     }

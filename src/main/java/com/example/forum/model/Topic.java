@@ -1,19 +1,22 @@
 package com.example.forum.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Setter
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "topics")
 public class Topic {
@@ -22,7 +25,7 @@ public class Topic {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer id;
 
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     String header;
 
     @Column(nullable = false)
@@ -32,7 +35,7 @@ public class Topic {
     boolean isAnonymous;
 
     @Column(nullable = false)
-    Integer views;
+    Double score;
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.REMOVE)
     @JsonManagedReference(value = "topic-comment")
@@ -49,4 +52,8 @@ public class Topic {
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     Category category;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.topic", cascade = CascadeType.ALL)
+    Set<TopicMark> topicMarks = new HashSet<>();
+
 }

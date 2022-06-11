@@ -1,6 +1,5 @@
 package com.example.forum.security;
 
-import com.example.forum.model.Role;
 import com.example.forum.model.Status;
 import com.example.forum.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,7 +14,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -68,7 +66,7 @@ public class UserDetailsImpl implements UserDetails {
                 user.getID(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getPicture().getUrl(),
+                user.getPictureUrl(),
                 user.getPassword(),
                 user.getStatus().equals(Status.ACTIVE),
                 new SimpleGrantedAuthority(user.getRole().name())

@@ -2,14 +2,15 @@ package com.example.forum.security.jwt;
 
 import com.example.forum.model.dto.JwtResponse;
 import com.example.forum.security.UserDetailsImpl;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -105,7 +106,7 @@ public class JwtService {
     }
 
     public void saveJwtInCookies(HttpServletResponse res,
-                                  UserDetails userDetails) {
+                                 UserDetails userDetails) {
         Cookie cookie = new Cookie(cookieJWT,
                 "Bearer_" + this.generateToken((UserDetailsImpl) userDetails));
         cookie.setHttpOnly(true);
@@ -115,8 +116,8 @@ public class JwtService {
     }
 
     public HttpServletResponse updateJwtInCookies(HttpServletResponse res,
-                                   HttpServletRequest req,
-                                   UserDetails userDetails) {
+                                                  HttpServletRequest req,
+                                                  UserDetails userDetails) {
 
         Cookie cookie = new Cookie(cookieJWT,
                 "Bearer_" + this.generateToken((UserDetailsImpl) userDetails));
@@ -125,14 +126,8 @@ public class JwtService {
         cookie.setMaxAge(Integer.MAX_VALUE);
         res.addCookie(cookie);
         return res;
-
-/*        Cookie cookie = getCookie(req, cookieJWT);
-        if (cookie != null) {
-            cookie.setValue("Bearer_" + this.generateToken((UserDetailsImpl) userDetails));
-            res.addCookie(cookie);
-        }
-        return res;*/
     }
+
     private Cookie getCookie(HttpServletRequest request, String name) {
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {

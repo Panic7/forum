@@ -4,10 +4,8 @@ import com.example.forum.model.dto.JwtRequest;
 import com.example.forum.model.dto.JwtResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -32,8 +30,6 @@ public class LoginUserInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws ModelAndViewDefiningException {
-
-        log.info("LoginUserInterceptor start");
 
         String bearerToken = Arrays.stream(request.getCookies())
                 .filter(cookie -> cookie.getName().equals(cookieName)).findFirst().map(Cookie::getValue)
@@ -60,7 +56,6 @@ public class LoginUserInterceptor implements HandlerInterceptor {
 
             throw new ModelAndViewDefiningException(mav);
         }
-        log.info("LoginUserInterceptor end");
 
         return true;
     }

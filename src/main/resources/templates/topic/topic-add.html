@@ -28,11 +28,11 @@
 
                 <div>
                     <label for="category" class="form-label mt-3">Category</label>
-                    <select th:field="*{categoryDTO.title}" id="category" class="form-select" >
+                    <select th:field="*{category.title}" id="category" class="form-select" >
                         <option th:each="i : ${categories}" th:value="${i.title}" th:text="${i.title}">
                         </option>
                     </select>
-                    <small class="mb-3" th:if="${#fields.hasErrors('categoryDTO.title')}" th:errors="*{categoryDTO.title}"/>
+                    <small class="mb-3" th:if="${#fields.hasErrors('category.title')}" th:errors="*{category.title}"/>
                 </div>
 
                 <div class="form-check mb-3 mt-3">

@@ -1,8 +1,6 @@
 package com.example.forum.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,12 +27,15 @@ public class Comment {
     @Column(name = "creation_date", nullable = false)
     LocalDateTime creationDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Column(name = "is_anonymous", nullable = false)
+    boolean isAnonymous;
+
+    @ManyToOne
     @JsonBackReference(value = "user-comment")
     @JoinColumn(name = "user_id")
     User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JsonBackReference(value = "topic-comment")
     @JoinColumn(name = "topic_id")
     Topic topic;

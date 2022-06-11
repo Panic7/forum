@@ -7,6 +7,8 @@
     <meta charset="UTF-8">
     <title>Profile page</title>
     <link rel="stylesheet" th:href="@{/css/custom-style.css}">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="/js/avatar-change.js"></script>
 </head>
 <body>
 <div layout:fragment="content">
@@ -20,6 +22,9 @@
                 <label class="custom-file-label" for="file">Choose file</label>
                 <input type="file" class="custom-file-input" id="file" name="file">
                 <button type="submit" id="buttonFileUpload" class="btn btn-primary w-100">Confirm</button>
+            </div>
+            <div class="mb-2" th:if="${message}">
+                <h2 th:text="${message}" class="form-text text-muted text-danger"></h2>
             </div>
         </form>
 
@@ -43,9 +48,6 @@
                 <button id="buttPassChange"
                         class="btn btn-primary mb-3 ml-auto mr-auto w-100">Change password
                 </button>
-                <div class="mb-2" th:if="${message}">
-                    <small th:text="${message}" class="form-text text-muted"></small>
-                </div>
             </div>
         </form>
     </div>

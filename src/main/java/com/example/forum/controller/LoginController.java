@@ -5,22 +5,20 @@ import com.example.forum.security.UserDetailsImpl;
 import com.example.forum.security.UserDetailsServiceImpl;
 import com.example.forum.security.jwt.JwtService;
 import lombok.AccessLevel;
-import lombok.experimental.NonFinal;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
@@ -37,7 +35,7 @@ public class LoginController {
 
     JwtService jwtService;
 
-    @GetMapping(path = {"/login", "/"})
+    @GetMapping("/login")
     public String loginPage(@ModelAttribute("request") JwtRequest request) {
         return "login";
     }
@@ -56,10 +54,10 @@ public class LoginController {
             return "login";
         }
         final UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService
-                    .loadUserByUsername(request.getLogin());
+                .loadUserByUsername(request.getLogin());
         jwtService.saveJwtInCookies(res, userDetails);
 
-        return "redirect:/dashboard";
+        return "redirect:/home";
     }
 
     private void authenticate(String username, String password) {
@@ -69,7 +67,7 @@ public class LoginController {
             throw new IllegalArgumentException("User disabled", e);
         } catch (BadCredentialsException e) {
             throw new IllegalArgumentException("Incorrect login or password", e);
-        } catch(AuthenticationException e) {
+        } catch (AuthenticationException e) {
             throw new IllegalArgumentException();
         }
     }

@@ -7,7 +7,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
+import javax.validation.constraints.Email;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -17,6 +17,7 @@ public class UserDTO {
     //@Size(min=4, max = 30, message = "Name must be of 4 to 30 symbols long ")
     String username;
 
+    @Email
     String email;
 
     @JsonIgnore
@@ -28,5 +29,4 @@ public class UserDTO {
 
     String pictureUrl;
 
-    List<CommentDTO> comments;
 }
