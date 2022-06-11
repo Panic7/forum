@@ -1,6 +1,5 @@
 package com.example.forum.converter;
 
-import com.example.forum.model.Picture;
 import com.example.forum.model.User;
 import com.example.forum.model.dto.UserDTO;
 import org.modelmapper.Converter;
@@ -17,12 +16,10 @@ public class UserMapper {
 
         Converter<String, String> encodingPassword = (src) -> passwordEncoder.encode(src.getSource());
         modelMapper.createTypeMap(UserDTO.class, User.class)
-                .addMapping(UserDTO::getPictureUrl, User::setPicture)
                 .addMappings(mapper -> mapper
                         .using(encodingPassword)
                         .map(UserDTO::getPassword, User::setPassword)
                 );
-        modelMapper.createTypeMap(Picture.class, String.class);
     }
 
     public User toEntity(UserDTO userDTO) {

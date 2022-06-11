@@ -1,61 +1,95 @@
 package com.example.forum.service;
 
+import com.example.forum.converter.TopicMapper;
 import com.example.forum.model.Category;
 import com.example.forum.model.Topic;
-import com.example.forum.model.User;
-import com.example.forum.model.dto.CategoryDTO;
+import com.example.forum.model.TopicMark;
 import com.example.forum.model.dto.TopicDTO;
-import com.example.forum.model.dto.UserDTO;
 import com.example.forum.repository.CategoryRepository;
 import com.example.forum.repository.TopicRepository;
 import com.example.forum.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.modelmapper.ModelMapper;
+import lombok.experimental.NonFinal;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Service
 public class TopicService {
 
+    @NonFinal
+    @Value("${PRODUCTS_PER_PAGE}")
+    int PRODUCTS_PER_PAGE;
     CategoryRepository categoryRepository;
     TopicRepository topicRepository;
     UserRepository userRepository;
-    ModelMapper modelMapper;
+    TopicMapper topicMapper;
+    TopicMarkService topicMarkService;
+    DateService dateService;
 
-    public List<TopicDTO> findAll() {
-        return toDTOList(topicRepository.findAll());
+    public Page<TopicDTO> findPage(int currentPage, String sortParam) {
+        Pageable pageable = PageRequest.of(currentPage - 1, PRODUCTS_PER_PAGE, Sort.by(sortParam).descending());
+        return topicRepository.findAll(pageable).map(topicMapper::toDTO);
+    }
+
+    public Page<TopicDTO> findPage(int currentPage, String sortParam, Integer categoryId) {
+        Category category = new Category();
+        category.setId(categoryId);
+        Pageable pageable = PageRequest.of(currentPage - 1, PRODUCTS_PER_PAGE, Sort.by(sortParam).descending());
+        return topicRepository.findAllByCategory(pageable, category).map(topicMapper::toDTO);
     }
 
     public TopicDTO findById(Integer id) {
-        return toDTO(topicRepository.findById(id).orElseThrow());
+        return topicMapper.toDTO(topicRepository.findById(id).orElseThrow());
     }
 
     @Transactional
-    public void save(TopicDTO topicDTO) {
-        Topic topic = toEntity(topicDTO);
+    public TopicDTO findByIdEagerly(Integer id) {
+        Topic topic = topicRepository.findByIdAndFetchCommentsEagerly(id);
+        return topicMapper.toDTO(topic);
+    }
 
-        topic.setCategory(categoryRepository.findByTitle(topicDTO.getCategoryDTO().getTitle()).orElseThrow());
-        topic.setAuthor(userRepository.findByName(topicDTO.getUserDTO().getName()).orElseThrow());
+    @Transactional
+    public boolean save(TopicDTO topicDTO, Integer userId) {
 
+        Topic topic = topicMapper.toEntity(topicDTO);
+        topic.setCreationDate(LocalDateTime.now());
+        topic.setUser(userRepository.getById(userId));
+        Optional<Category> optional = categoryRepository.findByTitle(topicDTO.getCategory().getTitle());
+        if (optional.isEmpty()) {
+            return false;
+        }
+        if (topicDTO.getScore() == null) {
+            topic.setScore(0d);
+        } else {
+            topic.setScore(topicDTO.getScore());
+        }
+        topic.setCategory(optional.get());
         topicRepository.save(topic);
+        return true;
     }
 
 
     @Transactional
     public void update(TopicDTO topicDTO, Integer id) {
+        Topic topicForSearch = Topic.builder().id(id).build();
         Topic findedTopic = topicRepository.findById(id).orElseThrow();
-
         findedTopic.setHeader(topicDTO.getHeader());
         findedTopic.setDescription(topicDTO.getDescription());
         findedTopic.setAnonymous(topicDTO.isAnonymous());
-        findedTopic.getCategory().setTitle(topicDTO.getCategoryDTO().getTitle());
+        findedTopic.getCategory().setTitle(topicDTO.getCategory().getTitle());
     }
 
     @Transactional
@@ -63,33 +97,28 @@ public class TopicService {
         topicRepository.deleteById(id);
     }
 
-    private TopicDTO toDTO(Topic topic) {
-        TopicDTO topicDTO = modelMapper.map(topic, TopicDTO.class);
-
-        topicDTO.setCategoryDTO(modelMapper.map(topic.getCategory(), CategoryDTO.class));
-        topicDTO.setUserDTO(modelMapper.map(topic.getAuthor(), UserDTO.class));
+    public TopicDTO actualizeDataDTO(TopicDTO topicDTO, Integer currentUserId) {
+        topicDTO.setLikes(topicMarkService.getCountPositiveMarks(topicDTO.getId()));
+        topicDTO.setDislikes(topicMarkService.getCountNegativeMarks(topicDTO.getId()));
+        Optional<TopicMark> optional = topicMarkService.findByTopicAndUser(topicDTO.getId(), currentUserId);
+        optional.ifPresent(topicMark -> topicDTO.setMark(topicMark.getMark()));
+        topicDTO.setSinceCreation(dateService.actualizeSinceCreation(topicDTO.getCreationDate()));
+        topicDTO.getComments().forEach(c -> c.setSinceCreation(
+                dateService.actualizeSinceCreation(c.getCreationDate())));
 
         return topicDTO;
     }
 
-    private Topic toEntity(TopicDTO topicDTO) {
-        Topic topic = modelMapper.map(topicDTO, Topic.class);
-
-        topic.setAuthor(modelMapper.map(topicDTO.getUserDTO(), User.class));
-        topic.setCategory(modelMapper.map(topicDTO.getCategoryDTO(), Category.class));
-
-        return topic;
+    public List<TopicDTO> actualizeSinceCreation(List<TopicDTO> topicDTOS) {
+        topicDTOS.forEach(this::actualizeSinceCreation);
+        return topicDTOS;
     }
 
-    private List<Topic> toEntityList(List<TopicDTO> topics) {
-        return topics.stream()
-                .map(this::toEntity)
-                .collect(Collectors.toList());
+    public TopicDTO actualizeSinceCreation(TopicDTO topicDTO) {
+        topicDTO.setSinceCreation(dateService.actualizeSinceCreation(topicDTO.getCreationDate()));
+        topicDTO.getComments().forEach(c -> c.setSinceCreation(
+                dateService.actualizeSinceCreation(c.getCreationDate())));
+        return topicDTO;
     }
 
-    private List<TopicDTO> toDTOList(List<Topic> topics) {
-        return topics.stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-    }
 }
