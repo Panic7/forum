@@ -16,7 +16,7 @@
         <h1 class="h1 text-center">This is profile view</h1>
         <img th:src="${jwtResponse.pictureUrl}" class="img-profile rounded-circle" alt="Profile Image"
              style="display:block; width: 200px; height: 200px; margin: 2em auto 2em auto;">
-        <form class="mx-auto mb-5 w-25" th:action="@{/user/profile/change-avatar}" method="post"
+        <form class="mx-auto mb-5 w-25" th:action="@{/user/profile/change-avatar}" th:method="put"
               enctype="multipart/form-data">
             <div class="input-group">
                 <label class="custom-file-label" for="file">Choose file</label>
@@ -29,7 +29,7 @@
         </form>
 
         <h2 class="h2 mb-4 text-center">Change your password</h2>
-        <form th:action="@{/user/profile/change-password}" method="post">
+        <form th:action="@{/user/profile/change-password}" th:method="put">
 
             <div class="form-group w-25 ml-auto mr-auto">
                 <label class="form-label" for="currPass">Enter your current password</label>

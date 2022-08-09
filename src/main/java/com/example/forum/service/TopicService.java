@@ -51,8 +51,17 @@ public class TopicService {
         return topicRepository.findAllByCategory(pageable, category).map(topicMapper::toDTO);
     }
 
+    public Page<TopicDTO> findPage(int currentPage, String sortParam, String key) {
+        Pageable pageable = PageRequest.of(currentPage - 1, PRODUCTS_PER_PAGE, Sort.by(sortParam).descending());
+        return topicRepository.findAllByHeaderContaining(pageable, key).map(topicMapper::toDTO);
+    }
+
     public TopicDTO findById(Integer id) {
         return topicMapper.toDTO(topicRepository.findById(id).orElseThrow());
+    }
+
+    public void deleteById(Integer id) {
+        topicRepository.deleteById(id);
     }
 
     @Transactional
@@ -61,9 +70,7 @@ public class TopicService {
         return topicMapper.toDTO(topic);
     }
 
-    @Transactional
     public boolean save(TopicDTO topicDTO, Integer userId) {
-
         Topic topic = topicMapper.toEntity(topicDTO);
         topic.setCreationDate(LocalDateTime.now());
         topic.setUser(userRepository.getById(userId));

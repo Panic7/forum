@@ -23,7 +23,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer ID;
+    Integer id;
 
     @NotBlank(message = "Enter the name")
     @Size(min = 4, max = 30, message = "Name must be of 4 to 30 symbols long")

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"
+      layout:decorate="~{layouts/blank}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Management</title>
+    <link rel="stylesheet" th:href="@{/css/custom-style.css}">
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container">
+        <a th:href="@{/user/add}" class="btn btn-outline-primary mb-2 btn-lg">Add user</a>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Username</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
+                <th scope="col">Status</th>
+                <th scope="col">Activities</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user : ${users}">
+                <th scope="row" th:text="${user.id}"></th>
+                <td th:text="${user.username}"></td>
+                <td th:text="${user.email}"></td>
+                <td th:text="${user.role}"></td>
+                <td th:text="${user.status}"></td>
+                <td class="d-flex" th:if="${user.id} != ${jwtResponse.id}" th:each="authority : ${#authentication.getAuthorities()}">
+                    <div th:if="${authority.getAuthority() == T(com.example.forum.model.Role).ROLE_MODERATOR.name()}">
+                        <form th:if="${user.status == T(com.example.forum.model.Status).BANNED and
+                        user.role == T(com.example.forum.model.Role).ROLE_USER}" th:method="put"
+                              class="mr-3" th:action="@{/user/{id}(id=${user.id})}">
+                            <input type="hidden" th:value="${T(com.example.forum.model.Status).ACTIVE}"
+                                   th:attr="name='userStatus'"/>
+                            <input type="hidden" th:value="${user.email}"
+                                   th:attr="name='email'"/>
+                            <button type="submit" class="btn btn-outline-primary">Unban</button>
+                        </form>
+                        <form th:if="${user.status == T(com.example.forum.model.Status).ACTIVE and
+                        user.role == T(com.example.forum.model.Role).ROLE_USER}" th:method="put"
+                              class="mr-3" th:action="@{/user/{id}(id=${user.id})}">
+                            <input type="hidden" th:value="${T(com.example.forum.model.Status).BANNED}"
+                                   th:attr="name='userStatus'"/>
+                            <input type="hidden" th:value="${user.email}"
+                                   th:attr="name='email'"/>
+                            <button type="submit" class="btn btn-outline-primary">Ban</button>
+                        </form>
+                    </div>
+
+                    <div th:if="${authority.getAuthority() == T(com.example.forum.model.Role).ROLE_ADMIN.name()}">
+                        <form th:if="${user.status == T(com.example.forum.model.Status).BANNED}" th:method="put"
+                              class="mr-3" th:action="@{/user/{id}(id=${user.id})}">
+                            <input type="hidden" th:value="${T(com.example.forum.model.Status).ACTIVE}"
+                                   th:attr="name='userStatus'"/>
+                            <input type="hidden" th:value="${user.email}"
+                                   th:attr="name='email'"/>
+                            <button type="submit" class="btn btn-outline-primary">Unban</button>
+                        </form>
+                        <form th:if="${user.status == T(com.example.forum.model.Status).ACTIVE}" th:method="put"
+                              class="mr-3" th:action="@{/user/{id}(id=${user.id})}">
+                            <input type="hidden" th:value="${T(com.example.forum.model.Status).BANNED}"
+                                   th:attr="name='userStatus'"/>
+                            <input type="hidden" th:value="${user.email}"
+                                   th:attr="name='email'"/>
+                            <button type="submit" class="btn btn-outline-primary">Ban</button>
+                        </form>
+                        <form th:if="${user?.role == T(com.example.forum.model.Role).ROLE_MODERATOR or user?.role == null}" th:method="put"
+                              class="mr-3" th:action="@{/user/{id}(id=${user.id})}">
+                            <input type="hidden" th:value="${T(com.example.forum.model.Role).ROLE_USER}"
+                                   th:attr="name='userRole'"/>
+                            <input type="hidden" th:value="${user.email}"
+                                   th:attr="name='email'"/>
+                            <button type="submit" class="btn btn-outline-primary">To user</button>
+                        </form>
+                        <form th:if="${user?.role == T(com.example.forum.model.Role).ROLE_USER}" th:method="put"
+                              class="mr-3" th:action="@{/user/{id}(id=${user.id})}">
+                            <input type="hidden" th:value="${T(com.example.forum.model.Role).ROLE_MODERATOR}"
+                                   th:attr="name='userRole'"/>
+                            <input type="hidden" th:value="${user.email}"
+                                   th:attr="name='email'"/>
+                            <button type="submit" class="btn btn-outline-primary">To moderator</button>
+                        </form>
+                        <form th:method="delete" class="mr-3" th:action="@{/user/{id}(id=${user.id})}">
+                            <button type="submit" class="btn btn-outline-primary">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

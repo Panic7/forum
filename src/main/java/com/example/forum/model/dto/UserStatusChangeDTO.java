@@ -1,14 +1,15 @@
 package com.example.forum.model.dto;
 
+import com.example.forum.model.Status;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserCommentFormDTO {
+public class UserStatusChangeDTO {
 
-    String username;
+    Integer id;
 
-    String pictureUrl;
+    Status status;
 }

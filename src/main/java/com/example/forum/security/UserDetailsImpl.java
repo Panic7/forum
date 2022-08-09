@@ -61,9 +61,9 @@ public class UserDetailsImpl implements UserDetails {
         return isActive;
     }
 
-    public static UserDetails create(User user) {
+    public static UserDetailsImpl create(User user) {
         return new UserDetailsImpl(
-                user.getID(),
+                user.getId(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getPictureUrl(),

@@ -1,13 +1,11 @@
 package com.example.forum.converter;
 
-import com.example.forum.model.Category;
-import com.example.forum.model.Comment;
 import com.example.forum.model.Topic;
-import com.example.forum.model.User;
 import com.example.forum.model.dto.CategoryDTO;
 import com.example.forum.model.dto.CommentDTO;
 import com.example.forum.model.dto.TopicDTO;
 import com.example.forum.model.dto.UserDTO;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
@@ -15,18 +13,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class TopicMapper {
 
     private final ModelMapper modelMapper;
-
-    public TopicMapper(ModelMapper modelMapper) {
-        this.modelMapper = modelMapper;
-        modelMapper.createTypeMap(Category.class, CategoryDTO.class);
-        modelMapper.createTypeMap(CategoryDTO.class, Category.class);
-        modelMapper.createTypeMap(UserDTO.class, User.class);
-        modelMapper.createTypeMap(User.class, UserDTO.class);
-        modelMapper.createTypeMap(Comment.class, CommentDTO.class);
-    }
 
     public Topic toEntity(TopicDTO topicDTO) {
         return modelMapper.map(topicDTO, Topic.class);

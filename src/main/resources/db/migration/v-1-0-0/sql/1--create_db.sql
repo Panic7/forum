@@ -4,8 +4,8 @@ create table if not exists users
     username    text   not null,
     email       text   not null,
     password    text   not null,
-    role        text   not null,
     status      text   not null,
+    role        text,
     picture_url text
 );
 
@@ -62,3 +62,12 @@ alter table comments
     add constraint fk_comments_topics foreign key (topic_id) references topics (id);
 alter table comments
     add constraint fk_comments_users foreign key (user_id) references users (id);
+
+create unique index users_email_uindex
+    on users (email);
+create unique index users_username_uindex
+    on users (username);
+create unique index categories_title_uindex
+    on categories (title);
+create unique index topics_header_uindex
+    on topics (header);

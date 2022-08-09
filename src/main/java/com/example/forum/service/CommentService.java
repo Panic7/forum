@@ -38,6 +38,10 @@ public class CommentService {
         commentRepository.save(comment);
     }
 
+    public void deleteById(Integer id) {
+        commentRepository.deleteById(id);
+    }
+
     public List<CommentDTO> actualizeSinceCreation(List<CommentDTO> commentDTO) {
         commentDTO.forEach(c -> c.setSinceCreation(
                 dateService.actualizeSinceCreation(c.getCreationDate())));

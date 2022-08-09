@@ -11,13 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 @RequiredArgsConstructor
 @Component
 @Slf4j
-public class CategoryInterceptor implements HandlerInterceptor {
+public class BlankViewInterceptor implements HandlerInterceptor {
     private final CategoryService categoryService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         request.setAttribute("categories", categoryService.findAll());
-
+        request.setAttribute("key", "");
         return true;
     }
 }

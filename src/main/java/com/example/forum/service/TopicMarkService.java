@@ -42,7 +42,7 @@ public class TopicMarkService {
     }
 
     public Optional<TopicMark> findByTopicAndUser(Integer topicId, Integer userId) {
-        User user = User.builder().ID(userId).build();
+        User user = User.builder().id(userId).build();
         Topic topic = Topic.builder().id(topicId).build();
         TopicUserId topicUserId = TopicUserId.builder().topic(topic).user(user).build();
         return topicMarkRepository.findByPk(topicUserId);
@@ -59,7 +59,7 @@ public class TopicMarkService {
                 topicMark.setMark(mark);
             }
         } else {
-            User user = User.builder().ID(userId).build();
+            User user = User.builder().id(userId).build();
             Topic topic = Topic.builder().id(topicId).build();
             TopicMark topicMark = new TopicMark();
             topicMark.setMark(mark);
@@ -74,7 +74,7 @@ public class TopicMarkService {
     public void saveMark(TopicMark topicMark) {
         Optional<TopicMark> searched = findByTopicAndUser(
                 topicMark.getPk().getTopic().getId(),
-                topicMark.getPk().getUser().getID());
+                topicMark.getPk().getUser().getId());
         if (searched.isPresent()) {
             TopicMark searchedTopicMark = searched.get();
             if (searchedTopicMark.getMark() == topicMark.getMark()) {

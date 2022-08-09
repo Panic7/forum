@@ -20,6 +20,6 @@ public class JwtRequest implements Serializable {
     @NotBlank(message = "Enter username or email")
     String login;
 
-    @Size(min = 5, max = 16, message = "Password length must be less than 17 and more than 4")
+    @Size(min = 5, max = 16, message = "Password length must be of 5 to 16 symbols")
     String password;
 }

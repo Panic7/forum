@@ -32,7 +32,7 @@
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" th:href="@{/home}">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" th:href="@{/}">
                 <div class="sidebar-brand-icon rotate-n-15">
                     <i class="fas fa-laugh-wink"></i>
                 </div>
@@ -44,15 +44,13 @@
 
             <!-- Nav Item - Dashboard -->
             <li class="nav-item">
-                <a class="nav-link" th:href="@{/home}">
+                <a class="nav-link" th:href="@{/}">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Home</span></a>
             </li>
 
             <!-- Divider -->
             <hr class="sidebar-divider">
-
-
             <!-- Heading -->
             <div class="sidebar-heading">
                 public
@@ -60,19 +58,51 @@
 
             <!-- Nav Item - Pages Collapse Menu -->
             <li class="nav-item active">
-                <a class="nav-link" href="#" data-toggle="collapse" data-target="#collapsePages" aria-expanded="true"
-                    aria-controls="collapsePages">
+                <a class="nav-link" href="#" data-toggle="collapse" data-target="#collapsePages1" aria-expanded="true"
+                    aria-controls="collapsePages1">
                     <i class="fas fa-fw fa-folder"></i>
                     <span>Filters</span>
                 </a>
-                <div id="collapsePages" class="collapse show"
+                <div id="collapsePages1" class="collapse show"
                      aria-labelledby="headingPages " data-parent="#accordionSidebar"
                      >
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Categories:</h6>
                         <div th:each="category : ${categories}">
-                            <a class="collapse-item" th:href="@{'/home' + '?category=' + ${category.id}}" th:text="${category.title}"></a>
+                            <a class="collapse-item" th:href="@{'/' + '?category=' + ${category.id}}" th:text="${category.title}"></a>
                         </div>
+                        <div class="collapse-divider"></div>
+                    </div>
+                </div>
+            </li>
+
+            <!--Admin menu-->
+            <div th:each="authority : ${#authentication.getAuthorities()}">
+                <div th:if="${authority.getAuthority() == T(com.example.forum.model.Role).ROLE_MODERATOR.name()
+                or authority.getAuthority() == T(com.example.forum.model.Role).ROLE_ADMIN.name()}">
+                    <!-- Divider -->
+                    <hr class="sidebar-divider">
+                    <div class="sidebar-heading">
+                        admin
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Nav Item - Pages Collapse Menu -->
+            <li class="nav-item active">
+                <a class="nav-link" href="#" data-toggle="collapse" data-target="#collapsePages2" aria-expanded="true"
+                   aria-controls="collapsePages2">
+                    <i class="fas fa-fw fa-folder"></i>
+                    <span>Pages</span>
+                </a>
+                <div id="collapsePages2" class="collapse show"
+                     aria-labelledby="headingPages " data-parent="#accordionSidebar"
+                >
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Users:</h6>
+                            <a class="collapse-item" th:href="@{/user/management}">User management</a>
                         <div class="collapse-divider"></div>
                     </div>
                 </div>
@@ -101,12 +131,13 @@
 
                     <!-- Topbar Search -->
                     <form
-                        class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                        class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search"
+                        th:action="@{/search}" method="get">
                         <div class="input-group">
-                            <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
+                            <input type="text" th:attr="name='key'" class="form-control bg-light border-0 small" placeholder="Search for..."
                                 aria-label="Search" aria-describedby="basic-addon2">
                             <div class="input-group-append">
-                                <button class="btn btn-primary" type="button">
+                                <button class="btn btn-primary" type="submit">
                                     <i class="fas fa-search fa-sm"></i>
                                 </button>
                             </div>
@@ -130,14 +161,6 @@
                                 <a class="dropdown-item" th:href="@{/user/profile}">
                                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Profile
-                                </a>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Settings
-                                </a>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Activity Log
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">

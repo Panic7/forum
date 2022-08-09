@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"
+      layout:decorate="~{layouts/blank}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile page</title>
+    <link rel="stylesheet" th:href="@{/css/custom-style.css}">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="/js/avatar-change.js"></script>
+    <style>
+        #inputGroupSelect01 {
+            display: block;
+            width: 100%;
+            padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+            -moz-padding-start: calc(0.75rem - 3px);
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #212529;
+            background-color: #fff;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            appearance: none;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex flex-column justify-content-center">
+        <h1 class="h1 text-center">Fill the form</h1>
+        <form th:action="@{/user/add}" method="post" th:object="${user}">
+            <div class="form-group w-25 ml-auto mr-auto">
+                <label class="form-label" for="currPass">Usename</label>
+                <input type="text" class="form-control" id="currPass" th:field="*{username}">
+                <small th:if="${#fields.hasErrors('username')}" th:errors="*{username}"/>
+            </div>
+            <div class="form-group w-25 ml-auto mr-auto">
+                <label class="form-label" for="email">Email</label>
+                <input type="text" class="form-control" id="email" th:field="*{email}">
+                <small th:if="${#fields.hasErrors('email')}" th:errors="*{email}"/>
+            </div>
+            <div th:each="authority : ${#authentication.getAuthorities()}">
+                <div th:if="${authority.getAuthority().equals('ROLE_ADMIN')}"
+                     class="form-group w-25 d-flex flex-row mr-auto mb-3 ml-auto ">
+                    <label class="input-group-text" for="inputGroupSelect01">Role</label>
+                    <select class="form-select" id="inputGroupSelect01" th:field="*{role}">
+                        <option th:value="${T(com.example.forum.model.Role).ROLE_USER}">User</option>
+                        <option th:value="${T(com.example.forum.model.Role).ROLE_ADMIN}">Admin</option>
+                        <option th:value="${T(com.example.forum.model.Role).ROLE_MODERATOR}">Moderator</option>
+                    </select>
+                    <small th:if="${#fields.hasErrors('role')}" th:errors="*{role}"/>
+                </div>
+            </div>
+            <div class="form-group w-25 ml-auto mr-auto">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" class="form-control" id="password" th:field="*{password}">
+                <small id="passwordHelpBlock" class="form-text text-primary">
+                    Your password must be 5-16 characters.
+                </small>
+                <small th:if="${#fields.hasErrors('password')}" th:errors="*{password}"/>
+            </div>
+            <div class="form-group w-25 ml-auto mr-auto">
+                <button id="buttPassChange" type="submit"
+                        class="btn btn-primary mb-3 ml-auto mr-auto w-100">Execute
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

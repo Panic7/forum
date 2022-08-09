@@ -1,7 +1,6 @@
 package com.example.forum.security.jwt;
 
 import com.example.forum.common.StringConstants;
-import com.example.forum.security.UserDetailsImpl;
 import com.example.forum.security.UserDetailsServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.AccessLevel;
@@ -53,7 +52,6 @@ public class JwtFilter extends OncePerRequestFilter {
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
         logger.info("Request URL path : " + request.getRequestURI());
-        logger.info("Request content type: " + request.getContentType());
         String token = parseJwt(request);
         String username;
         if (token != null) {
@@ -61,13 +59,12 @@ public class JwtFilter extends OncePerRequestFilter {
                 username = jwtService.extractUsername(token);
             } catch (IllegalArgumentException e) {
                 logger.warn("Unable to get JWT Token");
-                ModelAndView mav = new ModelAndView("login");
+                ModelAndView mav = new ModelAndView("redirect:/login");
 
                 throw new ModelAndViewDefiningException(mav);
             } catch (ExpiredJwtException e) {
                 logger.warn("JWT Token has expired");
-                ModelAndView mav = new ModelAndView("login");
-
+                ModelAndView mav = new ModelAndView("redirect:/login");
                 throw new ModelAndViewDefiningException(mav);
             }
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -87,17 +84,24 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         } else {
             logger.warn("JWT Token does not begin with Bearer_ String, or unable to get cookies");
+            ModelAndView mav = new ModelAndView("redirect:/login");
+            throw new ModelAndViewDefiningException(mav);
         }
         filterChain.doFilter(request, response);
     }
 
-    private String parseJwt(HttpServletRequest request) {
-        String token = Arrays.stream(request.getCookies())
-                .filter(cookie -> cookie.getName().equals(cookieName)).findFirst().map(Cookie::getValue)
-                .orElse("cant get token from cookies");
+    private String parseJwt(HttpServletRequest request) throws ModelAndViewDefiningException {
+        try{
+            String token = Arrays.stream(request.getCookies())
+                    .filter(cookie -> cookie.getName().equals(cookieName)).findFirst().map(Cookie::getValue)
+                    .orElse("cant get token from cookies");
 
-        if (token.startsWith("Bearer_")) {
-            return token.substring(7);
+            if (token.startsWith("Bearer_")) {
+                return token.substring(7);
+            }
+        } catch (Exception e) {
+            ModelAndView mav = new ModelAndView("redirect:/login");
+            throw new ModelAndViewDefiningException(mav);
         }
         return null;
     }

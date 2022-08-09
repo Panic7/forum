@@ -16,4 +16,6 @@ public interface TopicRepository extends JpaRepository<Topic, Integer> {
 
     Page<Topic> findAllByCategory(Pageable pageable, Category category);
 
+    Page<Topic> findAllByHeaderContaining(Pageable pageable, String key);
+
 }
