@@ -1,0 +1,6 @@
+insert into users(username, email, password, role, status) values ('admin', 'admin@gmail.com', 'admin', 'ADMIN', 'ACTIVE');
+
+insert into categories(title) values ('Family');
+
+insert into topics(header,description,is_anonymous,creation_date, category_id, user_id)
+values ('header1','description2',true, now(), 1, 1);
